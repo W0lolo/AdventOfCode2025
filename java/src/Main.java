@@ -2,6 +2,7 @@ import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) {
+        // TODO file inputs paths changed
         /* // day 7
         String pathToInput = "Input/Day7.txt";
         String pathToInputTest = "Input/Day7test.txt";
