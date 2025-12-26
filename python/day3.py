@@ -57,7 +57,7 @@ def day3solverpart2(path):
             temp += (10**(11-index))*maxdigit
             lasti += 1
             index+=1
-            
+
         total+= temp
 
 
