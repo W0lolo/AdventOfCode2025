@@ -3,6 +3,7 @@ import numpy as np
 
 def day10part1solver(path):
     # need total least amount of button presses to switch on all machines
+
     total = 0
     with open(path,"r") as file:
         inp = file.readlines()
@@ -15,7 +16,6 @@ def day10part1solver(path):
 
         config = list(map( lambda x: 1 if x=='#' else 0 ,machine.partition('[')[2].partition(']')[0]))
         # 1 if the light needs to be on 0 otherwise
-
 
         buttons = list(map( lambda x: list(map(int,x.split(','))),re.findall(r'\(([^)]+)\)',machine)))
         small = 1000
@@ -58,65 +58,88 @@ def day10part1solver(path):
                 if am[r,leading] == 1:
                     add_row(r,add)
 
-        # TODO handle rows where the leading 1 is not on the diagonal/check indexes
-        for col in range(0,cols-1): # col of leading one
-            for row in range(col,rows): # col of row with leading one
-                if am[row,col]==1:
+        undiag = 0 # index of first row not checked to have a leading 0
+        for col in range(0,cols-1):
+            for row in range(undiag,rows):
+                if am[row,col] == 1:
                     # switch rows
-                    am[[col,row]]=am[[row,col]]
-                    add_row_to_nonzero(col,col)
+                    am[[undiag,row]] = am[[row,undiag]]
+                    add_row_to_nonzero(col,undiag)
+                    undiag+=1
                     break
 
+
         # list of free vars
-        free = [] # indexes of the free variables
-        for i in range(0,min(cols-1,rows)):
-            if am[i,i] == 0:
-                free+=[i]
+        free = []  # indexes of the free variables
 
-        if rows < cols-1:
-            for i in range(rows,cols-1): # TODO find some way to count free vars where rows is the limiting factor
-                free+=[i]
+        col = 0 # column index
+        diag = 0 # row we are trying to find leading 1 for
+        while col<cols-1 and diag<rows:
+            if am[diag,col]==1: # found leading 1
+                diag+=1
+            else: # found free var
+                free+=[col]
+            col+=1
 
-        def count_zs(settings):
+        for i in range(col,cols-1):
+            free += [i]
+
+        def solve_vars(settings):
             """
-            :param settings: the setting of free variables
-            :return: -1 if not solution
+            :param settings: setting of free variables
+            :return: solution to augmented matrix
             """
+
             nonlocal free, am, cols, rows
-            ans = [0]*(cols-1)
+            ans = [0] * (cols - 1)
 
             # setting free variables
             for index in range(0, len(settings)):
                 ans[free[index]] = settings[index]
 
-            for diag in range(0, min(cols, rows)):
-                if am[diag,diag] == 1: # not a free variable
-                    ans[diag] = am[diag, cols - 1]
+            leading = 0  # col of leading 1 (index of ans)
+            for row in range(0,rows):
+                while am[row,leading] == 0 and leading<cols-1: # finding col of leading 1
+                    leading+=1
 
-                    for ind in free:
-                        if am[diag,ind] == 1 and ans[ind] == 1: # dependent on free var
-                            ans[diag] = 1 if ans[diag] == 0 else 0 # flip
+                if leading >= cols-1:
+                    break
 
+                ans[leading] = int(am[row,cols-1])
 
-            return ans.count(1)
+                for ind in free:
+                    if am[row,ind] == 1 and ans[ind] == 1:
+                        ans[diag] ^=1
 
+            return ans
 
-
+        matrix_sol =None
+        best_sol=None
         # loop through settings of free vars
         for no in range(0,2**len(free)):
             setting = [1 if (no >> i) & 1 else 0  for i in range(0,len(free))]
-            temp = count_zs(setting)
+            matrix_sol = solve_vars(setting)
+            temp = matrix_sol.count(1)
             if temp < small:
+                best_sol = matrix_sol
                 small = temp
 
 
+        # testing sol to get failing cases
 
+        for i in range(0,len(best_sol)):
+            if best_sol[i] ==1:
+                for light in buttons[i]:
+                    config[light] ^= 1
 
-        print(am)
-        print(f"free: {free}, smallest no of presses {small}")
-        print(f"shape: rows: {rows} cols:{cols}")
-        print()
-
+        if config.count(1) >0:
+            print(am)
+            print(f"free: {free}, smallest no of presses {small}")
+            print(f"shape: rows: {rows} cols:{cols}")
+            print(f"solution {best_sol}")
+            print(f"buttons {buttons}")
+            print(f"config {config}")
+            print()
 
         return small
 
@@ -126,4 +149,4 @@ def day10part1solver(path):
     return total
 
 
-print(day10part1solver("../Input/Day10test.txt"))
+print(day10part1solver("../Input/Day10.txt"))
