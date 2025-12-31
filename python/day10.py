@@ -2,7 +2,7 @@ import re
 import numpy as np
 
 def day10part1solver(path):
-    # need total least amount of button presses to switch on all machines
+    # does not find the minimal number of button presses
 
     total = 0
     with open(path,"r") as file:
@@ -10,8 +10,8 @@ def day10part1solver(path):
 
     def pressbuttons(machine):
         """
-        :param index: the machine index (line no)
-        :return: the number of buttons needing pressing
+        :param machine: a line from the input representing a machine
+        :return: the minimal no of button presses needed
         """
 
         config = list(map( lambda x: 1 if x=='#' else 0 ,machine.partition('[')[2].partition(']')[0]))
@@ -109,7 +109,7 @@ def day10part1solver(path):
 
                 for ind in free:
                     if am[row,ind] == 1 and ans[ind] == 1:
-                        ans[diag] ^=1
+                        ans[leading] ^=1
 
             return ans
 
@@ -133,6 +133,7 @@ def day10part1solver(path):
                     config[light] ^= 1
 
         if config.count(1) >0:
+            print("problematic case: ")
             print(am)
             print(f"free: {free}, smallest no of presses {small}")
             print(f"shape: rows: {rows} cols:{cols}")
