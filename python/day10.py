@@ -1,5 +1,6 @@
 import re
 import numpy as np
+from z3 import *
 
 def day10part1solver(path):
     # does not find the minimal number of button presses
@@ -150,4 +151,56 @@ def day10part1solver(path):
     return total
 
 
-print(day10part1solver("../Input/Day10.txt"))
+
+def day10part2solver(path):
+
+    with open(path,"r") as file:
+        inp = file.readlines()
+
+    def pressbuttons(machine):
+        """
+        :param machine: a line from the input representing a machine
+        :return: the minimal no of button presses needed
+        """
+
+        #config = list(map( lambda x: 1 if x=='#' else 0 ,machine.partition('{')[2].partition('}')[0]))
+        # 1 if the light needs to be on 0 otherwise
+        config = list(map(int,machine.partition('{')[2].partition('}')[0].split(',')))
+        buttons = list(map( lambda x: list(map(int,x.split(','))),re.findall(r'\(([^)]+)\)',machine)))
+
+
+        # each row is a list of buttons that contribute to that light
+        eq = [[] for _ in range(0,len(config))]
+        for i,button in enumerate(buttons):
+            for l in button:
+                eq[l] += [i]
+
+        # solving using z3
+        z3vars = [Int(f'x{i}') for i in range(0, len(buttons))] # vars in solver z3 will try to find
+        solver = Optimize() # z3 solver
+
+        # adding z3 constraints
+        for var in z3vars: # non-negative number of button presses condition
+            solver.add(var >= 0)
+
+        for i,row in enumerate(eq): # solution to linear system of equations
+            solver.add(sum(z3vars[x] for x in row) == config[i])
+
+        solver.minimize(sum(var for var in z3vars))
+        solver.check()
+        sol = solver.model()
+        tot = 0
+        for var in z3vars:
+            tot += sol[var].as_long()
+        return tot
+
+
+    total =0
+    for line in inp:
+        total += pressbuttons(line)
+
+    return total
+
+
+
+print(day10part2solver("../Input/Day10.txt"))
