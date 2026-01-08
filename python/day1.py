@@ -43,23 +43,24 @@ def day1solverpart2(path):
     with open(path,'r') as file:
         inp = list(map(int, file.read().replace('R', '').replace('L', '-').split()))
 
-    current = 50
+
     passes = 0
+    dial = 50
     for turn in inp:
-        passes += abs(turn)//100 # counting full turns
-        current = current + (turn%100) if turn >= 0 else current-((-turn)%100)
 
-        if current == 0:
-            passes += 1
-        elif current > 100:
-            passes += 1
-            current -= 100
-        elif current < 0:
-            passes += 1
-            current += 1
+        full, rem = divmod(abs(turn),100)
+        passes += full
+        rem = -rem if turn < 0 else rem
+        nextdial = dial + rem
 
-        current = current %100
+        if dial != 0:
+            if rem < 0 and nextdial <=0:
+                passes+=1
+            elif rem > 0 and nextdial >= 100:
+                passes+=1
 
+        dial =nextdial%100
     return passes
 
-print(day1solverpart2("../Input/Day1test.txt"))
+print(day1solverpart2("../Input/Day1.txt"))
+
